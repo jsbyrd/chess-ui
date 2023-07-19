@@ -16,14 +16,14 @@ const verticalAxis = ["1", "2", "3", "4", "5", "6", "7", "8"];
 const initialBoardState: Piece[] = [];
 // Pawns
 for (let i = 0; i < 8; i++) {
-  initialBoardState.push(new Pawn(i, 1, PieceType.PAWN, PieceColor.WHITE));
-  initialBoardState.push(new Pawn(i, 6, PieceType.PAWN, PieceColor.BLACK));
+  initialBoardState.push(new Pawn(i, 6, PieceType.PAWN, PieceColor.WHITE));
+  initialBoardState.push(new Pawn(i, 1, PieceType.PAWN, PieceColor.BLACK));
 }
 
 // Major & Minor Pieces
 for (let i = 0; i < 2; i++) {
   const pieceColor = i === 0 ? PieceColor.WHITE : PieceColor.BLACK;
-  const ypos = i === 0 ? 0 : 7;
+  const ypos = i === 0 ? 7 : 0;
 
   initialBoardState.push(new Rook(0, ypos, PieceType.ROOK, pieceColor));
   initialBoardState.push(new Rook(7, ypos, PieceType.ROOK, pieceColor));
@@ -40,7 +40,7 @@ const Chessboard = () => {
   const [gridY, setGridY] = useState(0);
   const [pieces, setPieces] = useState<Piece[]>(initialBoardState);
   const [activePiece, setActivePiece] = useState<HTMLElement | null>(null);
-  let board = [];
+  let board = new Array(64);
 
   const chessboardRef = useRef<HTMLDivElement>(null);
 
@@ -53,9 +53,7 @@ const Chessboard = () => {
     if (element.classList.contains("chess-piece") && chessboard) {
       // Saves original position of grabbed piece
       const gridX = Math.floor((e.clientX - chessboard.offsetLeft) / 70);
-      const gridY = Math.abs(
-        Math.ceil((e.clientY - chessboard.offsetTop - 560) / 70)
-      );
+      const gridY = Math.floor((e.clientY - chessboard.offsetTop) / 70);
       setGridX(gridX);
       setGridY(gridY);
       // Centers piece onto mouse when grabbed
@@ -109,15 +107,13 @@ const Chessboard = () => {
     const chessboard = chessboardRef.current;
     if (activePiece && chessboard) {
       const x = Math.floor((e.clientX - chessboard.offsetLeft) / 70);
-      const y = Math.abs(
-        Math.ceil((e.clientY - chessboard.offsetTop - 560) / 70)
-      );
-      console.log(x, y);
+      const y = Math.floor((e.clientY - chessboard.offsetTop) / 70);
+
       setPieces((value) => {
         const pieces = value.map((p) => {
-          if (p.x === gridX && p.y === gridY) {
-            p.x = x;
-            p.y = y;
+          if (p.position.x === gridX && p.position.y === gridY) {
+            p.position.x = x;
+            p.position.y = y;
           }
           return p;
         });
@@ -129,16 +125,18 @@ const Chessboard = () => {
   // -~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
 
   // Places Tiles with Pieces
-  for (let j = verticalAxis.length - 1; j >= 0; j--) {
+  for (let j = 0; j < verticalAxis.length; j++) {
     for (let i = 0; i < horizontalAxis.length; i++) {
       let image = undefined;
 
       pieces.forEach((p) => {
-        if (p.x === i && p.y === j) {
+        if (p.position.x === i && p.position.y === j) {
           image = p.image;
         }
       });
-      board.push(<Tile key={`${i}_${j}`} image={image} number={i + j} />);
+      board[j * 8 + i] = (
+        <Tile key={`${i}_${j}`} image={image} number={i + j} />
+      );
     }
   }
 
