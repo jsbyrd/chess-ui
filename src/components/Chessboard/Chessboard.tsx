@@ -1,68 +1,38 @@
 import { useState, useRef } from "react";
 import Tile from "../Tile/Tile";
+import { Piece } from "../../pieces/Piece";
+import { PieceType, PieceColor } from "../../utils";
 import "./Chessboard.css";
+import { Pawn } from "../../pieces/Pawn";
+import { Rook } from "../../pieces/Rook";
+import { Knight } from "../../pieces/Knight";
+import { Bishop } from "../../pieces/Bishop";
+import { Queen } from "../../pieces/Queen";
+import { King } from "../../pieces/King";
 
 const horizontalAxis = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const verticalAxis = ["1", "2", "3", "4", "5", "6", "7", "8"];
 
-interface Piece {
-  image: string;
-  x: number;
-  y: number;
-}
-
 const initialBoardState: Piece[] = [];
 // Pawns
 for (let i = 0; i < 8; i++) {
-  initialBoardState.push({ image: "assets/images/pawn_w.png", x: i, y: 1 });
-  initialBoardState.push({ image: "assets/images/pawn_b.png", x: i, y: 6 });
+  initialBoardState.push(new Pawn(i, 1, PieceType.PAWN, PieceColor.WHITE));
+  initialBoardState.push(new Pawn(i, 6, PieceType.PAWN, PieceColor.BLACK));
 }
 
 // Major & Minor Pieces
 for (let i = 0; i < 2; i++) {
-  const color = i === 0 ? "w" : "b";
+  const pieceColor = i === 0 ? PieceColor.WHITE : PieceColor.BLACK;
   const ypos = i === 0 ? 0 : 7;
 
-  initialBoardState.push({
-    image: `assets/images/rook_${color}.png`,
-    x: 0,
-    y: ypos,
-  });
-  initialBoardState.push({
-    image: `assets/images/rook_${color}.png`,
-    x: 7,
-    y: ypos,
-  });
-  initialBoardState.push({
-    image: `assets/images/knight_${color}.png`,
-    x: 1,
-    y: ypos,
-  });
-  initialBoardState.push({
-    image: `assets/images/knight_${color}.png`,
-    x: 6,
-    y: ypos,
-  });
-  initialBoardState.push({
-    image: `assets/images/bishop_${color}.png`,
-    x: 2,
-    y: ypos,
-  });
-  initialBoardState.push({
-    image: `assets/images/bishop_${color}.png`,
-    x: 5,
-    y: ypos,
-  });
-  initialBoardState.push({
-    image: `assets/images/queen_${color}.png`,
-    x: 3,
-    y: ypos,
-  });
-  initialBoardState.push({
-    image: `assets/images/king_${color}.png`,
-    x: 4,
-    y: ypos,
-  });
+  initialBoardState.push(new Rook(0, ypos, PieceType.ROOK, pieceColor));
+  initialBoardState.push(new Rook(7, ypos, PieceType.ROOK, pieceColor));
+  initialBoardState.push(new Knight(1, ypos, PieceType.KNIGHT, pieceColor));
+  initialBoardState.push(new Knight(6, ypos, PieceType.KNIGHT, pieceColor));
+  initialBoardState.push(new Bishop(2, ypos, PieceType.BISHOP, pieceColor));
+  initialBoardState.push(new Bishop(5, ypos, PieceType.BISHOP, pieceColor));
+  initialBoardState.push(new Queen(3, ypos, PieceType.QUEEN, pieceColor));
+  initialBoardState.push(new King(4, ypos, PieceType.KING, pieceColor));
 }
 
 const Chessboard = () => {
