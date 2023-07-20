@@ -18,4 +18,6 @@ export abstract class Piece {
       `Position: (${this.position.x}, ${this.position.y}), PieceType: ${this.type}, PieceColor: ${this.color}`
     );
   }
+
+  abstract generateMoves(currentBoard: Piece[]): Position[] | null;
 }

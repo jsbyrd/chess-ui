@@ -8,4 +8,9 @@ export class Rook extends Piece {
     super(x, y, type, color);
     this.hasMoved = false;
   }
+
+  generateMoves(currentBoard: Piece[]) {
+    console.log(currentBoard);
+    return null;
+  }
 }

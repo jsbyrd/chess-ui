@@ -1,7 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Tile from "../Tile/Tile";
 import { Piece } from "../../pieces/Piece";
-import { PieceType, PieceColor } from "../../utils";
+import { PieceType, PieceColor, Position } from "../../utils";
 import "./Chessboard.css";
 import { Pawn } from "../../pieces/Pawn";
 import { Rook } from "../../pieces/Rook";
@@ -13,11 +13,11 @@ import { King } from "../../pieces/King";
 const horizontalAxis = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const verticalAxis = ["1", "2", "3", "4", "5", "6", "7", "8"];
 
-const initialBoardState: Piece[] = [];
+const initialBoardState: Piece[] = new Array(64);
 // Pawns
 for (let i = 0; i < 8; i++) {
-  initialBoardState.push(new Pawn(i, 6, PieceType.PAWN, PieceColor.WHITE));
-  initialBoardState.push(new Pawn(i, 1, PieceType.PAWN, PieceColor.BLACK));
+  initialBoardState[i + 48] = new Pawn(i, 6, PieceType.PAWN, PieceColor.WHITE);
+  initialBoardState[i + 8] = new Pawn(i, 1, PieceType.PAWN, PieceColor.BLACK);
 }
 
 // Major & Minor Pieces
@@ -25,14 +25,54 @@ for (let i = 0; i < 2; i++) {
   const pieceColor = i === 0 ? PieceColor.WHITE : PieceColor.BLACK;
   const ypos = i === 0 ? 7 : 0;
 
-  initialBoardState.push(new Rook(0, ypos, PieceType.ROOK, pieceColor));
-  initialBoardState.push(new Rook(7, ypos, PieceType.ROOK, pieceColor));
-  initialBoardState.push(new Knight(1, ypos, PieceType.KNIGHT, pieceColor));
-  initialBoardState.push(new Knight(6, ypos, PieceType.KNIGHT, pieceColor));
-  initialBoardState.push(new Bishop(2, ypos, PieceType.BISHOP, pieceColor));
-  initialBoardState.push(new Bishop(5, ypos, PieceType.BISHOP, pieceColor));
-  initialBoardState.push(new Queen(3, ypos, PieceType.QUEEN, pieceColor));
-  initialBoardState.push(new King(4, ypos, PieceType.KING, pieceColor));
+  // Rooks
+  initialBoardState[ypos * 8] = new Rook(0, ypos, PieceType.ROOK, pieceColor);
+  initialBoardState[7 + ypos * 8] = new Rook(
+    7,
+    ypos,
+    PieceType.ROOK,
+    pieceColor
+  );
+  // Knights
+  initialBoardState[1 + ypos * 8] = new Knight(
+    1,
+    ypos,
+    PieceType.KNIGHT,
+    pieceColor
+  );
+  initialBoardState[6 + ypos * 8] = new Knight(
+    6,
+    ypos,
+    PieceType.KNIGHT,
+    pieceColor
+  );
+  // Bishops
+  initialBoardState[2 + ypos * 8] = new Bishop(
+    2,
+    ypos,
+    PieceType.BISHOP,
+    pieceColor
+  );
+  initialBoardState[5 + ypos * 8] = new Bishop(
+    5,
+    ypos,
+    PieceType.BISHOP,
+    pieceColor
+  );
+  // Queen
+  initialBoardState[3 + ypos * 8] = new Queen(
+    3,
+    ypos,
+    PieceType.QUEEN,
+    pieceColor
+  );
+  // King
+  initialBoardState[4 + ypos * 8] = new King(
+    4,
+    ypos,
+    PieceType.KING,
+    pieceColor
+  );
 }
 
 const Chessboard = () => {
@@ -40,12 +80,11 @@ const Chessboard = () => {
   const [gridY, setGridY] = useState(0);
   const [pieces, setPieces] = useState<Piece[]>(initialBoardState);
   const [activePiece, setActivePiece] = useState<HTMLElement | null>(null);
-  let board = new Array(64);
+  const [possibleMoves, setPossibleMoves] = useState<Position[]>([]);
 
   const chessboardRef = useRef<HTMLDivElement>(null);
 
   // -~-~- Piece movement logic -~-~-
-
   const grabPiece = (e: React.MouseEvent) => {
     const element = e.target as HTMLElement;
     const chessboard = chessboardRef.current;
@@ -65,6 +104,14 @@ const Chessboard = () => {
       element.style.left = `${x}px`;
 
       setActivePiece(element);
+
+      // Find the piece object that corresponds to grabbed HTMLElement
+      const piece = pieces.find(
+        (p) => p && p.position.x === gridX && p.position.y === gridY
+      );
+      if (piece) {
+        piece.displayPieceInfo();
+      }
     }
   };
 
@@ -109,35 +156,32 @@ const Chessboard = () => {
       const x = Math.floor((e.clientX - chessboard.offsetLeft) / 70);
       const y = Math.floor((e.clientY - chessboard.offsetTop) / 70);
 
-      setPieces((value) => {
-        const pieces = value.map((p) => {
-          if (p.position.x === gridX && p.position.y === gridY) {
-            p.position.x = x;
-            p.position.y = y;
-          }
-          return p;
-        });
-        return pieces;
-      });
+      const piecesClone = new Array(64);
+
+      for (let i = 0; i < pieces.length; i++) {
+        piecesClone[i] = pieces[i];
+      }
+
+      // Move piece to new location
+      piecesClone[x + y * 8] = pieces[gridX + gridY * 8];
+      // Delete piece from old location
+      piecesClone[gridX + gridY * 8] = null;
+
+      setPieces(piecesClone);
       setActivePiece(null);
     }
   };
   // -~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
 
-  // Places Tiles with Pieces
-  for (let j = 0; j < verticalAxis.length; j++) {
-    for (let i = 0; i < horizontalAxis.length; i++) {
-      let image = undefined;
+  // Board is the array of Tile components that will be rendered onto the screen
+  const board: JSX.Element[] = new Array(64);
 
-      pieces.forEach((p) => {
-        if (p.position.x === i && p.position.y === j) {
-          image = p.image;
-        }
-      });
-      board[j * 8 + i] = (
-        <Tile key={`${i}_${j}`} image={image} number={i + j} />
-      );
-    }
+  for (let i = 0; i < pieces.length; i++) {
+    const p = pieces[i];
+    const image = p ? p.image : undefined;
+    const x = i % 8;
+    const y = Math.floor(i / 8);
+    board[i] = <Tile key={`${i}`} image={image} number={x + y} />;
   }
 
   return (

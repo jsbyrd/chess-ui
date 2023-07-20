@@ -20,4 +20,8 @@ export class Position {
     this.x = x;
     this.y = y;
   }
+
+  isSamePosition(otherPosition: Position): boolean {
+    return otherPosition.x === this.x && otherPosition.y === this.y;
+  }
 }
