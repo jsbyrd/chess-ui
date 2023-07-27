@@ -10,8 +10,8 @@ import { Bishop } from "../../pieces/Bishop";
 import { Queen } from "../../pieces/Queen";
 import { King } from "../../pieces/King";
 
-const horizontalAxis = ["a", "b", "c", "d", "e", "f", "g", "h"];
-const verticalAxis = ["1", "2", "3", "4", "5", "6", "7", "8"];
+// const horizontalAxis = ["a", "b", "c", "d", "e", "f", "g", "h"];
+// const verticalAxis = ["1", "2", "3", "4", "5", "6", "7", "8"];
 
 const initialBoardState: Piece[] = new Array(64);
 // Pawns
@@ -27,52 +27,17 @@ for (let i = 0; i < 2; i++) {
 
   // Rooks
   initialBoardState[ypos * 8] = new Rook(0, ypos, PieceType.ROOK, pieceColor);
-  initialBoardState[7 + ypos * 8] = new Rook(
-    7,
-    ypos,
-    PieceType.ROOK,
-    pieceColor
-  );
+  initialBoardState[7 + ypos * 8] = new Rook(7, ypos, PieceType.ROOK, pieceColor);
   // Knights
-  initialBoardState[1 + ypos * 8] = new Knight(
-    1,
-    ypos,
-    PieceType.KNIGHT,
-    pieceColor
-  );
-  initialBoardState[6 + ypos * 8] = new Knight(
-    6,
-    ypos,
-    PieceType.KNIGHT,
-    pieceColor
-  );
+  initialBoardState[1 + ypos * 8] = new Knight(1, ypos, PieceType.KNIGHT, pieceColor);
+  initialBoardState[6 + ypos * 8] = new Knight(6,ypos,PieceType.KNIGHT,pieceColor);
   // Bishops
-  initialBoardState[2 + ypos * 8] = new Bishop(
-    2,
-    ypos,
-    PieceType.BISHOP,
-    pieceColor
-  );
-  initialBoardState[5 + ypos * 8] = new Bishop(
-    5,
-    ypos,
-    PieceType.BISHOP,
-    pieceColor
-  );
+  initialBoardState[2 + ypos * 8] = new Bishop(2,ypos,PieceType.BISHOP,pieceColor);
+  initialBoardState[5 + ypos * 8] = new Bishop(5,ypos,PieceType.BISHOP,pieceColor);
   // Queen
-  initialBoardState[3 + ypos * 8] = new Queen(
-    3,
-    ypos,
-    PieceType.QUEEN,
-    pieceColor
-  );
+  initialBoardState[3 + ypos * 8] = new Queen(3,ypos,PieceType.QUEEN,pieceColor);
   // King
-  initialBoardState[4 + ypos * 8] = new King(
-    4,
-    ypos,
-    PieceType.KING,
-    pieceColor
-  );
+  initialBoardState[4 + ypos * 8] = new King(4,ypos,PieceType.KING,pieceColor);
 }
 
 const Chessboard = () => {
@@ -151,23 +116,41 @@ const Chessboard = () => {
   };
 
   const dropPiece = (e: React.MouseEvent) => {
-    const chessboard = chessboardRef.current;
+    const chessboard: HTMLDivElement | null = chessboardRef.current;
     if (activePiece && chessboard) {
-      const x = Math.floor((e.clientX - chessboard.offsetLeft) / 70);
-      const y = Math.floor((e.clientY - chessboard.offsetTop) / 70);
+      const x: number = Math.floor((e.clientX - chessboard.offsetLeft) / 70);
+      const y: number = Math.floor((e.clientY - chessboard.offsetTop) / 70);
+      const piece: Piece = pieces[gridX + gridY * 8];
+      const potentialPosition: Position = new Position(x, y);
+      const allLegalMoves: Position[] = piece.generateMoves(pieces);
+      let isLegalMove: boolean = false;
 
-      const piecesClone = new Array(64);
+      allLegalMoves.forEach((position) => {
+        if (position.isSamePosition(potentialPosition)) {
+          isLegalMove = true;
+        }
+      });
 
-      for (let i = 0; i < pieces.length; i++) {
-        piecesClone[i] = pieces[i];
+      if (isLegalMove) {
+        console.log("Yay, this is a legal move!");
+        const piecesClone = new Array(64);
+  
+        for (let i = 0; i < pieces.length; i++) {
+          piecesClone[i] = pieces[i];
+        }
+  
+        // Move piece to new location
+        piecesClone[x + y * 8] = pieces[gridX + gridY * 8];
+        // Delete piece from old location
+        piecesClone[gridX + gridY * 8] = null;
+  
+        setPieces(piecesClone);
+      } else {
+        activePiece.style.position = "relative";
+        activePiece.style.removeProperty("top");
+        activePiece.style.removeProperty("left");
       }
 
-      // Move piece to new location
-      piecesClone[x + y * 8] = pieces[gridX + gridY * 8];
-      // Delete piece from old location
-      piecesClone[gridX + gridY * 8] = null;
-
-      setPieces(piecesClone);
       setActivePiece(null);
     }
   };

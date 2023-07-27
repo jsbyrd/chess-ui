@@ -1,9 +1,9 @@
 import { Piece } from "./Piece";
-import { PieceColor, PieceType } from "../utils";
+import { PieceColor, PieceType, Position } from "../utils";
 
 export class Knight extends Piece {
   generateMoves(currentBoard: Piece[]) {
-    console.log(currentBoard);
-    return null;
+    let moves: Position[] = [];
+    return moves;
   }
 }

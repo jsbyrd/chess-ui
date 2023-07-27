@@ -19,5 +19,5 @@ export abstract class Piece {
     );
   }
 
-  abstract generateMoves(currentBoard: Piece[]): Position[] | null;
+  abstract generateMoves(currentBoard: Piece[]): Position[];
 }

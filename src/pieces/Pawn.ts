@@ -22,6 +22,8 @@ export class Pawn extends Piece {
       moves.push(new Position(this.position.x, this.position.y + 1));
     }
 
+    console.log("Moves: " + moves);
+
     return moves;
   }
 }
