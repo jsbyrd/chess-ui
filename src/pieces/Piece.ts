@@ -19,5 +19,9 @@ export abstract class Piece {
     );
   }
 
+  isSameColor(otherPiece: Piece): boolean {
+    return this.color === otherPiece.color;
+  }
+
   abstract generateMoves(currentBoard: Piece[]): Position[];
 }

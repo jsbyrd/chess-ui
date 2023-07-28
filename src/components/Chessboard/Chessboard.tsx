@@ -132,7 +132,6 @@ const Chessboard = () => {
       });
 
       if (isLegalMove) {
-        console.log("Yay, this is a legal move!");
         const piecesClone = new Array(64);
   
         for (let i = 0; i < pieces.length; i++) {
@@ -141,6 +140,12 @@ const Chessboard = () => {
   
         // Move piece to new location
         piecesClone[x + y * 8] = pieces[gridX + gridY * 8];
+        piecesClone[x + y * 8].position.x = x;
+        piecesClone[x + y * 8].position.y = y;
+        const pieceType: PieceType = piece.type;
+        if (pieceType === PieceType.PAWN || pieceType === PieceType.KING || pieceType === PieceType.ROOK) {
+          piecesClone[x + y * 8].hasMoved = true;
+        }
         // Delete piece from old location
         piecesClone[gridX + gridY * 8] = null;
   
@@ -149,6 +154,7 @@ const Chessboard = () => {
         activePiece.style.position = "relative";
         activePiece.style.removeProperty("top");
         activePiece.style.removeProperty("left");
+        activePiece.style.removeProperty("position");
       }
 
       setActivePiece(null);
