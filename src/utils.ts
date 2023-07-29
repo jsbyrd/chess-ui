@@ -24,4 +24,8 @@ export class Position {
   isSamePosition(otherPosition: Position): boolean {
     return otherPosition.x === this.x && otherPosition.y === this.y;
   }
+
+  static isLegalPosition(x: number, y: number): boolean {
+    return (x >= 0 && x < 8 && y >= 0 && y < 8);
+  }
 }

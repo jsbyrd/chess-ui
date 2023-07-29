@@ -45,7 +45,6 @@ const Chessboard = () => {
   const [gridY, setGridY] = useState(0);
   const [pieces, setPieces] = useState<Piece[]>(initialBoardState);
   const [activePiece, setActivePiece] = useState<HTMLElement | null>(null);
-  const [possibleMoves, setPossibleMoves] = useState<Position[]>([]);
 
   const chessboardRef = useRef<HTMLDivElement>(null);
 
@@ -71,47 +70,38 @@ const Chessboard = () => {
       setActivePiece(element);
 
       // Find the piece object that corresponds to grabbed HTMLElement
-      const piece = pieces.find(
-        (p) => p && p.position.x === gridX && p.position.y === gridY
-      );
-      if (piece) {
-        piece.displayPieceInfo();
-      }
+      const piece: Piece = pieces[gridX + gridY * 8];
+      piece.displayPieceInfo();
+      // Display all possible moves in the form of a hint icon
+      const potentialMoves: Position[] = piece.generateMoves(pieces);
+      potentialMoves.forEach((position) => {
+        console.log(position);
+      })
+      const tiles: NodeListOf<HTMLDivElement> = document.querySelectorAll(".tile");
+      potentialMoves.forEach((position) => {
+        const x: number = position.x;
+        const y: number = position.y;
+        const targetIndex: number = x + (y * 8);
+        if (pieces[targetIndex] === undefined) {
+          const hintIcon: HTMLDivElement = document.createElement("div");
+          hintIcon.classList.add("hint");
+          tiles[targetIndex].appendChild(hintIcon);
+        }
+      });
     }
   };
 
   const movePiece = (e: React.MouseEvent) => {
     const chessboard = chessboardRef.current;
     if (activePiece && chessboard) {
-      // Gets position of mouse
+      // Get position of mouse
       const offset = 36.55;
       const x = e.clientX - offset;
       const y = e.clientY - offset;
-      // Defines the boundaries of board
-      const minX = chessboard.offsetLeft - 20;
-      const minY = chessboard.offsetTop - 25;
-      const maxX = chessboard.offsetLeft + chessboard.clientWidth - 50;
-      const maxY = chessboard.offsetTop + chessboard.clientHeight - 55;
-
+      // Set position of piece to be the same as mouse (makes it look like the mouse is grabbing and dragging the piece) 
       activePiece.style.position = "absolute";
-
-      // Sets x value of piece, ensures the piece is within board
-      if (x < minX) {
-        activePiece.style.left = `${minX}px`;
-      } else if (x > maxX) {
-        activePiece.style.left = `${maxX}px`;
-      } else {
-        activePiece.style.left = `${x}px`;
-      }
-
-      // Sets y value of piece, ensures the piece is within board
-      if (y < minY) {
-        activePiece.style.top = `${minY}px`;
-      } else if (y > maxY) {
-        activePiece.style.top = `${maxY}px`;
-      } else {
-        activePiece.style.top = `${y}px`;
-      }
+      activePiece.style.left = `${x}px`;
+      activePiece.style.top = `${y}px`;
     }
   };
 
@@ -131,6 +121,14 @@ const Chessboard = () => {
         }
       });
 
+      // Remove all hint icons
+      const hintIcons: NodeListOf<HTMLDivElement> = document.querySelectorAll(".hint");
+      hintIcons.forEach((hintIcon) => {
+        hintIcon.remove();
+      });
+
+
+      // Make the move so long as its legal
       if (isLegalMove) {
         const piecesClone = new Array(64);
   
@@ -147,10 +145,12 @@ const Chessboard = () => {
           piecesClone[x + y * 8].hasMoved = true;
         }
         // Delete piece from old location
-        piecesClone[gridX + gridY * 8] = null;
+        piecesClone[gridX + gridY * 8] = undefined;
   
         setPieces(piecesClone);
-      } else {
+      }
+      // If an illegal move, move the piece back to its original position
+      else {
         activePiece.style.position = "relative";
         activePiece.style.removeProperty("top");
         activePiece.style.removeProperty("left");

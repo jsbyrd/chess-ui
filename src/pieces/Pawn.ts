@@ -13,9 +13,8 @@ export class Pawn extends Piece {
     let moves: Position[] = [];
     const moveIncrement: number = this.color === PieceColor.WHITE ? -1 : 1;
 
-    if (this.position.y >= 0 && this.position.y < 8) {
+    if (this.position.y > 0 && this.position.y < 7) {
       // Move forward so long as no piece is in front of it
-      console.log(currentBoard[(this.position.x) + ((this.position.y + moveIncrement) * 8)]);
       if (currentBoard[(this.position.x) + ((this.position.y + moveIncrement) * 8)] === undefined) {
         moves.push(new Position(this.position.x, this.position.y + moveIncrement));
       }
