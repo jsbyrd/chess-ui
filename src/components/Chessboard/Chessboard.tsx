@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import Tile from "../Tile/Tile";
 import { Piece } from "../../pieces/Piece";
 import { PieceType, PieceColor, Position } from "../../utils";
@@ -77,15 +77,19 @@ const Chessboard = () => {
       potentialMoves.forEach((position) => {
         console.log(position);
       })
-      const tiles: NodeListOf<HTMLDivElement> = document.querySelectorAll(".tile");
+      const potentialHints: NodeListOf<HTMLDivElement> = document.querySelectorAll(".potential-hint");
       potentialMoves.forEach((position) => {
         const x: number = position.x;
         const y: number = position.y;
         const targetIndex: number = x + (y * 8);
+        potentialHints[targetIndex].classList.add("hint");
+        // Show hint for non-capture move
         if (pieces[targetIndex] === undefined) {
-          const hintIcon: HTMLDivElement = document.createElement("div");
-          hintIcon.classList.add("hint");
-          tiles[targetIndex].appendChild(hintIcon);
+          potentialHints[targetIndex].classList.add("small-hint");
+        }
+        // Show hint for capture move
+        else {
+          potentialHints[targetIndex].classList.add("big-hint");
         }
       });
     }
@@ -122,9 +126,11 @@ const Chessboard = () => {
       });
 
       // Remove all hint icons
-      const hintIcons: NodeListOf<HTMLDivElement> = document.querySelectorAll(".hint");
-      hintIcons.forEach((hintIcon) => {
-        hintIcon.remove();
+      const potentialHints: NodeListOf<HTMLDivElement> = document.querySelectorAll(".potential-hint");
+      potentialHints.forEach((hint) => {
+        hint.classList.remove("hint");
+        hint.classList.remove("small-hint");
+        hint.classList.remove("big-hint");
       });
 
 

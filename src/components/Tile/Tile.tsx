@@ -6,31 +6,19 @@ interface Props {
 }
 
 const Tile = ({ number, image }: Props) => {
+  const color: String = number % 2 === 0 ? "black" : "white";
   // Renders black tile
-  if (number % 2 === 0) {
     return (
-      <div className="tile black-tile">
-        {image && (
-          <div
-            style={{ backgroundImage: `url(${image})` }}
-            className="chess-piece"
-          ></div>
-        )}
+      <div className={`tile ${color}-tile`}>
+        <div className="potential-hint">
+          {image && (
+            <div
+              style={{ backgroundImage: `url(${image})` }}
+              className="chess-piece"
+            ></div>)}
+        </div>
       </div>
     );
-  } else {
-    // Renders white tile
-    return (
-      <div className="tile white-tile">
-        {image && (
-          <div
-            style={{ backgroundImage: `url(${image})` }}
-            className="chess-piece"
-          ></div>
-        )}
-      </div>
-    );
-  }
 };
 
 export default Tile;
