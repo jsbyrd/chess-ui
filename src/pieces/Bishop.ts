@@ -1,5 +1,5 @@
 import { Piece } from "./Piece";
-import { PieceColor, PieceType, Position } from "../utils";
+import { Position } from "../utils";
 
 export class Bishop extends Piece {
 
