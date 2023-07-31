@@ -74,9 +74,6 @@ const Chessboard = () => {
       piece.displayPieceInfo();
       // Display all possible moves in the form of a hint icon
       const potentialMoves: Position[] = piece.generateMoves(pieces);
-      potentialMoves.forEach((position) => {
-        console.log(position);
-      })
       const potentialHints: NodeListOf<HTMLDivElement> = document.querySelectorAll(".potential-hint");
       potentialMoves.forEach((position) => {
         const x: number = position.x;
