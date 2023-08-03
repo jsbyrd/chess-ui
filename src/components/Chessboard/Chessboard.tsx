@@ -10,8 +10,9 @@ import { Bishop } from "../../pieces/Bishop";
 import { Queen } from "../../pieces/Queen";
 import { King } from "../../pieces/King";
 
-// const horizontalAxis = ["a", "b", "c", "d", "e", "f", "g", "h"];
-// const verticalAxis = ["1", "2", "3", "4", "5", "6", "7", "8"];
+interface Props {
+  userColor: PieceColor;
+}
 
 const initialBoardState: Piece[] = new Array(64);
 // Pawns
@@ -40,13 +41,17 @@ for (let i = 0; i < 2; i++) {
   initialBoardState[4 + ypos * 8] = new King(4,ypos,PieceType.KING,pieceColor);
 }
 
-const Chessboard = () => {
+const Chessboard = ({ userColor }: Props) => {
   const [gridX, setGridX] = useState(0);
   const [gridY, setGridY] = useState(0);
   const [pieces, setPieces] = useState<Piece[]>(initialBoardState);
   const [activePiece, setActivePiece] = useState<HTMLElement | null>(null);
 
   const chessboardRef = useRef<HTMLDivElement>(null);
+
+  const getCorrectCoordinate = (coordinate: number)  => {
+    return userColor === PieceColor.WHITE ? coordinate : 7 - coordinate;
+  }
 
   // -~-~- Piece movement logic -~-~-
   const grabPiece = (e: React.MouseEvent) => {
@@ -57,8 +62,9 @@ const Chessboard = () => {
       // Saves original position of grabbed piece
       const gridX = Math.floor((e.clientX - chessboard.offsetLeft) / 70);
       const gridY = Math.floor((e.clientY - chessboard.offsetTop) / 70);
+      const newGridY = getCorrectCoordinate(gridY);
       setGridX(gridX);
-      setGridY(gridY);
+      setGridY(newGridY);
       // Centers piece onto mouse when grabbed
       const offset = 36.55;
       const x = e.clientX - offset;
@@ -70,23 +76,27 @@ const Chessboard = () => {
       setActivePiece(element);
 
       // Find the piece object that corresponds to grabbed HTMLElement
-      const piece: Piece = pieces[gridX + gridY * 8];
-      piece.displayPieceInfo();
+      const piece: Piece = pieces[gridX + newGridY * 8];
       // Display all possible moves in the form of a hint icon
       const potentialMoves: Position[] = piece.generateMoves(pieces);
       const potentialHints: NodeListOf<HTMLDivElement> = document.querySelectorAll(".potential-hint");
       potentialMoves.forEach((position) => {
         const x: number = position.x;
         const y: number = position.y;
-        const targetIndex: number = x + (y * 8);
-        potentialHints[targetIndex].classList.add("hint");
+        const correctY: number = getCorrectCoordinate(y);
+        // Note: Remember, when playing as the black pieces, the pieces array and the boardUI array are essentially
+        // reflections of each other. Seeing as potentialHints is based on the boardUI and NOT the pieces array, two
+        // separate indices are required for accessing both arrays because they are not in sync.
+        const targetIndexForPieces: number = x + (y * 8);
+        const targetIndexForHints: number = x + (correctY * 8);
+        potentialHints[targetIndexForHints].classList.add("hint");
         // Show hint for non-capture move
-        if (pieces[targetIndex] === undefined) {
-          potentialHints[targetIndex].classList.add("small-hint");
+        if (pieces[targetIndexForPieces] === undefined) {
+          potentialHints[targetIndexForHints].classList.add("small-hint");
         }
         // Show hint for capture move
         else {
-          potentialHints[targetIndex].classList.add("big-hint");
+          potentialHints[targetIndexForHints].classList.add("big-hint");
         }
       });
     }
@@ -111,8 +121,9 @@ const Chessboard = () => {
     if (activePiece && chessboard) {
       const x: number = Math.floor((e.clientX - chessboard.offsetLeft) / 70);
       const y: number = Math.floor((e.clientY - chessboard.offsetTop) / 70);
+      const correctY: number = getCorrectCoordinate(y);
       const piece: Piece = pieces[gridX + gridY * 8];
-      const potentialPosition: Position = new Position(x, y);
+      const potentialPosition: Position = new Position(x, correctY);
       const allLegalMoves: Position[] = piece.generateMoves(pieces);
       let isLegalMove: boolean = false;
 
@@ -140,12 +151,12 @@ const Chessboard = () => {
         }
   
         // Move piece to new location
-        piecesClone[x + y * 8] = pieces[gridX + gridY * 8];
-        piecesClone[x + y * 8].position.x = x;
-        piecesClone[x + y * 8].position.y = y;
+        piecesClone[x + correctY * 8] = pieces[gridX + gridY * 8];
+        piecesClone[x + correctY * 8].position.x = x;
+        piecesClone[x + correctY * 8].position.y = correctY;
         const pieceType: PieceType = piece.type;
         if (pieceType === PieceType.PAWN || pieceType === PieceType.KING || pieceType === PieceType.ROOK) {
-          piecesClone[x + y * 8].hasMoved = true;
+          piecesClone[x + correctY * 8].hasMoved = true;
         }
         // Delete piece from old location
         piecesClone[gridX + gridY * 8] = undefined;
@@ -165,15 +176,27 @@ const Chessboard = () => {
   };
   // -~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
 
-  // Board is the array of Tile components that will be rendered onto the screen
-  const board: JSX.Element[] = new Array(64);
-
-  for (let i = 0; i < pieces.length; i++) {
-    const p = pieces[i];
-    const image = p ? p.image : undefined;
-    const x = i % 8;
-    const y = Math.floor(i / 8);
-    board[i] = <Tile key={`${i}`} image={image} number={x + y} />;
+  // Renders the board
+  const boardUI: JSX.Element[] = new Array(64);
+  // Start from top right, render your way through by going right and down (like reading a book)
+  if (userColor === PieceColor.WHITE) {
+    for (let i = 0; i < pieces.length; i++) {
+      const p = pieces[i];
+      const image = p ? p.image : undefined;
+      const x = i % 8;
+      const y = Math.floor(i / 8);
+      boardUI[i] = <Tile key={`${i}`} image={image} number={x + y} index={i} />;
+    }
+  }
+  // Start from bottom right, render your way through by going right and up (honestly this is really ugly)
+  if (userColor === PieceColor.BLACK) {
+    for (let y = 7; y >= 0; y--) {
+      for (let x = 0; x < 8; x++) {
+        const p = pieces[y * 8 + x];
+        const image = p ? p.image : undefined;
+        boardUI[(7 - y) * 8 + x] = <Tile key={`${(7 - y) * 8 + x}`} image={image} number={x + y + 1} index={y * 8 + x} />;
+      }
+    }
   }
 
   return (
@@ -184,7 +207,7 @@ const Chessboard = () => {
       id="chessboard"
       ref={chessboardRef}
     >
-      {board}
+      {boardUI}
     </div>
   );
 };

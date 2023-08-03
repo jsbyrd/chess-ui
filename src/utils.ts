@@ -29,3 +29,30 @@ export class Position {
     return (x >= 0 && x < 8 && y >= 0 && y < 8);
   }
 }
+
+export class PositionHashSet {
+  private positions: boolean[];
+
+  constructor() {
+    this.positions = new Array(64);
+  }
+
+  add(position: Position) {
+    const x = position.x;
+    const y = position.y;
+    this.positions[x + y * 8] = true;
+  }
+
+  contains(position: Position) {
+    const x = position.x;
+    const y = position.y;
+    return this.positions[x + y * 8];
+  }
+
+  delete(position: Position) {
+    const x = position.x;
+    const y = position.y;
+    this.positions[x + y * 8] = false;
+  }
+
+}

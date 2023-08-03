@@ -23,14 +23,14 @@ export class Pawn extends Piece {
         moves.push(new Position(this.position.x, this.position.y + (moveIncrement * 2)));
       }
       // Check for captures (left column from white's perspective)
-      if (this.position.x > 0) {
+      if (this.position.x > 0 && this.position.x < 8) {
         const potentialVictim: Piece | null = currentBoard[(this.position.x - 1) + (this.position.y + moveIncrement) * 8];
         if (potentialVictim && !this.isSameColor(potentialVictim)) {
           moves.push(potentialVictim.position);
         }
       }
       // Check for captures (right column from white's perspective)
-      if (this.position.x < 8) {
+      if (this.position.x < 7 && this.position.x >= 0) {
         const potentialVictim: Piece | null = currentBoard[(this.position.x + 1) + (this.position.y + moveIncrement) * 8];
         if (potentialVictim && !this.isSameColor(potentialVictim)) {
           moves.push(potentialVictim.position);
