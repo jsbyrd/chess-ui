@@ -1,3 +1,5 @@
+import { Piece } from "./pieces/Piece";
+
 export enum PieceType {
   PAWN = "pawn",
   KNIGHT = "knight",
@@ -27,6 +29,18 @@ export class Position {
 
   static isLegalPosition(x: number, y: number): boolean {
     return (x >= 0 && x < 8 && y >= 0 && y < 8);
+  }
+}
+
+export class Move {
+  piece: Piece;
+  position: Position;
+  isCastleMove: boolean;
+
+  constructor(piece: Piece, position: Position, isCastleMove: boolean) {
+    this.piece = piece;
+    this.position = position;
+    this.isCastleMove = isCastleMove;
   }
 }
 

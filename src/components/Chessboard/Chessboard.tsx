@@ -1,7 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Tile from "../Tile/Tile";
 import { Piece } from "../../pieces/Piece";
-import { PieceType, PieceColor, Position } from "../../utils";
+import { PieceType, PieceColor, Position, Move } from "../../utils";
 import "./Chessboard.css";
 import { Pawn } from "../../pieces/Pawn";
 import { Rook } from "../../pieces/Rook";
@@ -12,42 +12,89 @@ import { King } from "../../pieces/King";
 
 interface Props {
   userColor: PieceColor;
+  pieces: Piece[];
+  handleActiveColorChange: (color: PieceColor) => void;
+  handlePiecesChange: (pieceArray: Piece[]) => void;
 }
 
-const initialBoardState: Piece[] = new Array(64);
-// Pawns
-for (let i = 0; i < 8; i++) {
-  initialBoardState[i + 48] = new Pawn(i, 6, PieceType.PAWN, PieceColor.WHITE);
-  initialBoardState[i + 8] = new Pawn(i, 1, PieceType.PAWN, PieceColor.BLACK);
-}
-
-// Major & Minor Pieces
-for (let i = 0; i < 2; i++) {
-  const pieceColor = i === 0 ? PieceColor.WHITE : PieceColor.BLACK;
-  const ypos = i === 0 ? 7 : 0;
-
-  // Rooks
-  initialBoardState[ypos * 8] = new Rook(0, ypos, PieceType.ROOK, pieceColor);
-  initialBoardState[7 + ypos * 8] = new Rook(7, ypos, PieceType.ROOK, pieceColor);
-  // Knights
-  initialBoardState[1 + ypos * 8] = new Knight(1, ypos, PieceType.KNIGHT, pieceColor);
-  initialBoardState[6 + ypos * 8] = new Knight(6,ypos,PieceType.KNIGHT,pieceColor);
-  // Bishops
-  initialBoardState[2 + ypos * 8] = new Bishop(2,ypos,PieceType.BISHOP,pieceColor);
-  initialBoardState[5 + ypos * 8] = new Bishop(5,ypos,PieceType.BISHOP,pieceColor);
-  // Queen
-  initialBoardState[3 + ypos * 8] = new Queen(3,ypos,PieceType.QUEEN,pieceColor);
-  // King
-  initialBoardState[4 + ypos * 8] = new King(4,ypos,PieceType.KING,pieceColor);
-}
-
-const Chessboard = ({ userColor }: Props) => {
+const Chessboard = ({ userColor, pieces, handleActiveColorChange, handlePiecesChange }: Props) => {
   const [gridX, setGridX] = useState(0);
   const [gridY, setGridY] = useState(0);
-  const [pieces, setPieces] = useState<Piece[]>(initialBoardState);
+  const [fen, setFen] = useState("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
   const [activePiece, setActivePiece] = useState<HTMLElement | null>(null);
 
   const chessboardRef = useRef<HTMLDivElement>(null);
+
+  const isDigit = (character: string) => {
+    if (character.length === 1) {
+        const code: number | undefined = character.codePointAt(0);
+        if (code) {
+          return 47 < code && code < 58;
+        }
+    }
+    return false;
+  };
+
+  // Assumes accurate notation and valid position
+  const loadPositionFromFen = () => {
+    let x = 0;
+    let y = 0;
+    let divider = 0;
+    const piecesClone: Piece[] = new Array(64);
+
+    // Piece Placement
+    for (let i = 0; i < fen.length; i++) {
+      const char = fen[i];
+      if (char === " ") {
+        divider = i;
+        break;
+      }
+      if (char === "/") {
+        x = 0;
+        y++;
+        continue;
+      }
+      if (isDigit(char)) {
+        const digit = parseInt(char);
+        x += digit;
+      } else {
+        const pieceColor = (char === char.toUpperCase()) ? PieceColor.WHITE : PieceColor.BLACK;
+        const lowercaseChar = char.toLowerCase();
+        switch (lowercaseChar) {
+          case "p":
+            piecesClone[x + y * 8] = new Pawn(x, y, PieceType.PAWN, pieceColor)
+            break;
+          case "k":
+            piecesClone[x + y * 8] = new King(x, y, PieceType.KING, pieceColor)
+            break;
+          case "r":
+            piecesClone[x + y * 8] = new Rook(x, y, PieceType.ROOK, pieceColor)
+            break;
+          case "b":
+            piecesClone[x + y * 8] = new Bishop(x, y, PieceType.BISHOP, pieceColor)
+            break;
+          case "n":
+            piecesClone[x + y * 8] = new Knight(x, y, PieceType.KNIGHT, pieceColor)
+            break;
+          case "q":
+            piecesClone[x + y * 8] = new Queen(x, y, PieceType.QUEEN, pieceColor)
+            break;
+          default:
+            break;
+        }
+        x++;
+      }
+    }
+    handlePiecesChange(piecesClone);
+    // Game Info (whose turn, castling rights, etc.)
+    for (let i = divider; i < fen.length; i++) {
+      
+    }
+  }
+
+  useEffect(() => {
+    loadPositionFromFen();
+  }, [fen]);
 
   const getCorrectCoordinate = (coordinate: number)  => {
     return userColor === PieceColor.WHITE ? coordinate : 7 - coordinate;
@@ -78,11 +125,11 @@ const Chessboard = ({ userColor }: Props) => {
       // Find the piece object that corresponds to grabbed HTMLElement
       const piece: Piece = pieces[gridX + newGridY * 8];
       // Display all possible moves in the form of a hint icon
-      const potentialMoves: Position[] = piece.generateMoves(pieces);
+      const potentialMoves: Move[] = piece.generateMoves(pieces);
       const potentialHints: NodeListOf<HTMLDivElement> = document.querySelectorAll(".potential-hint");
-      potentialMoves.forEach((position) => {
-        const x: number = position.x;
-        const y: number = position.y;
+      potentialMoves.forEach((move) => {
+        const x: number = move.position.x;
+        const y: number = move.position.y;
         const correctY: number = getCorrectCoordinate(y);
         // Note: Remember, when playing as the black pieces, the pieces array and the boardUI array are essentially
         // reflections of each other. Seeing as potentialHints is based on the boardUI and NOT the pieces array, two
@@ -124,11 +171,11 @@ const Chessboard = ({ userColor }: Props) => {
       const correctY: number = getCorrectCoordinate(y);
       const piece: Piece = pieces[gridX + gridY * 8];
       const potentialPosition: Position = new Position(x, correctY);
-      const allLegalMoves: Position[] = piece.generateMoves(pieces);
+      const allLegalMoves: Move[] = piece.generateMoves(pieces);
       let isLegalMove: boolean = false;
 
-      allLegalMoves.forEach((position) => {
-        if (position.isSamePosition(potentialPosition)) {
+      allLegalMoves.forEach((move) => {
+        if (move.position.isSamePosition(potentialPosition)) {
           isLegalMove = true;
         }
       });
@@ -161,7 +208,9 @@ const Chessboard = ({ userColor }: Props) => {
         // Delete piece from old location
         piecesClone[gridX + gridY * 8] = undefined;
   
-        setPieces(piecesClone);
+        handlePiecesChange(piecesClone);
+        const opponentColor = userColor === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
+        handleActiveColorChange(opponentColor);
       }
       // If an illegal move, move the piece back to its original position
       else {

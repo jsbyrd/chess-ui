@@ -1,9 +1,9 @@
 import { Piece } from "./Piece";
-import { Position } from "../utils";
+import { Position, Move } from "../utils";
 
 export class Queen extends Piece {
   generateMoves(currentBoard: Piece[]) {
-    let moves: Position[] = [];
+    let moves: Move[] = [];
     const xIncrement = [1, 1, -1, -1, 1, -1, 0, 0];
     const yIncrement = [1, -1, 1, -1, 0, 0, 1, -1];
 
@@ -16,12 +16,12 @@ export class Queen extends Piece {
         // Check to see if there is a piece occupying that particular position
         if (potentialPiece) {
           if (!this.isSameColor(potentialPiece)) {
-            moves.push(new Position(newX, newY));
+            moves.push(new Move(this, new Position(newX, newY), false));
           }
           break;
         }
         // Otherwise, add the position as a valid move
-        moves.push(new Position(newX, newY));
+        moves.push(new Move(this, new Position(newX, newY), false));
         newX += xIncrement[i];
         newY += yIncrement[i];
       }

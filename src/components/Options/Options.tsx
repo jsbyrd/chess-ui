@@ -4,17 +4,17 @@ import "./Options.css"
 
 interface Props {
   handleUserColorChange: (color: PieceColor) => void;
-  handleIsActiveGameChange: (isActive: boolean) => void;
+  playGame: () => void;
 }
 
-const Options = ({ handleUserColorChange, handleIsActiveGameChange }: Props) => {
+const Options = ({ handleUserColorChange, playGame }: Props) => {
 
   const [color, setColor] = useState(PieceColor.WHITE);
 
   const handleStartGameButton = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     handleUserColorChange(color);
-    handleIsActiveGameChange(true);
+    playGame();
   }
 
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,7 +34,7 @@ const Options = ({ handleUserColorChange, handleIsActiveGameChange }: Props) => 
         <fieldset>
           <legend>Select Your Color</legend>
           <div>
-            <input type="radio" name="color" value={PieceColor.WHITE} id="play-white" onChange={handleColorChange} checked/>
+            <input type="radio" name="color" value={PieceColor.WHITE} id="play-white" onChange={handleColorChange} />
             <label htmlFor="play-white">&nbsp; White</label>
           </div>
           <div>

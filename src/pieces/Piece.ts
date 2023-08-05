@@ -1,4 +1,4 @@
-import { PieceType, PieceColor, Position } from "../utils";
+import { PieceType, PieceColor, Position, Move } from "../utils";
 
 export abstract class Piece {
   image: string;
@@ -23,5 +23,5 @@ export abstract class Piece {
     return this.color === otherPiece.color;
   }
 
-  abstract generateMoves(currentBoard: Piece[]): Position[];
+  abstract generateMoves(currentBoard: Piece[]): Move[];
 }
