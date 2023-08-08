@@ -16,9 +16,18 @@
   align-items: center;
 }
 
+.legend {
+  text-align: center;
+}
+
+fieldset {
+  width: 70%;
+  margin: 5px 2px 2px 2px;
+}
+
 .start-button {
   background-color: rgb(220, 220, 220);
-  margin-top: 40px;
+  margin-top: 20px;
   height: 30px;
   width: 100px;
   border: none;

@@ -11,16 +11,17 @@ import { Queen } from "../../pieces/Queen";
 import { King } from "../../pieces/King";
 
 interface Props {
+  fen: string;
   userColor: PieceColor;
+  activeColor: PieceColor;
   pieces: Piece[];
   handleActiveColorChange: (color: PieceColor) => void;
   handlePiecesChange: (pieceArray: Piece[]) => void;
 }
 
-const Chessboard = ({ userColor, pieces, handleActiveColorChange, handlePiecesChange }: Props) => {
+const Chessboard = ({ fen, userColor, activeColor, pieces, handleActiveColorChange, handlePiecesChange }: Props) => {
   const [gridX, setGridX] = useState(0);
   const [gridY, setGridY] = useState(0);
-  const [fen, setFen] = useState("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
   const [activePiece, setActivePiece] = useState<HTMLElement | null>(null);
 
   const chessboardRef = useRef<HTMLDivElement>(null);
@@ -112,6 +113,11 @@ const Chessboard = ({ userColor, pieces, handleActiveColorChange, handlePiecesCh
       const newGridY = getCorrectCoordinate(gridY);
       setGridX(gridX);
       setGridY(newGridY);
+      // Find the piece object that corresponds to grabbed HTMLElement
+      const piece: Piece = pieces[gridX + newGridY * 8];
+      // if (piece.color !== activeColor) {
+      //   return;
+      // }
       // Centers piece onto mouse when grabbed
       const offset = 36.55;
       const x = e.clientX - offset;
@@ -122,8 +128,6 @@ const Chessboard = ({ userColor, pieces, handleActiveColorChange, handlePiecesCh
 
       setActivePiece(element);
 
-      // Find the piece object that corresponds to grabbed HTMLElement
-      const piece: Piece = pieces[gridX + newGridY * 8];
       // Display all possible moves in the form of a hint icon
       const potentialMoves: Move[] = piece.generateMoves(pieces);
       const potentialHints: NodeListOf<HTMLDivElement> = document.querySelectorAll(".potential-hint");

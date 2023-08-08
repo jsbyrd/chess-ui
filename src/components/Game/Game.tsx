@@ -6,14 +6,20 @@ import { PieceColor, PieceType, Move } from "../../utils";
 import "./Game.css";
 
 const Game = () => {
+  const [gamemode, setGamemode] = useState("freestyle");
   const [isActiveGame, setIsActiveGame] = useState(false);
   const [activeColor, setActiveColor] = useState(PieceColor.WHITE);
   const [userColor, setUserColor] = useState(PieceColor.WHITE);
   const [turn, setTurn] = useState(0);
   const [pieces, setPieces] = useState<Piece[]>(new Array(64));
+  const [fen, setFen] = useState("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
 
   const getRandomInt = (max: number) => {
     return Math.floor(Math.random() * max);
+  }
+
+  const handleGamemodeChange = (mode: string) => {
+    setGamemode(mode);
   }
 
   const handleActiveColorChange = (color: PieceColor) => {
@@ -31,7 +37,7 @@ const Game = () => {
   const findAllLegalMoves = (color: PieceColor) => {
     let allLegalMoves: Move[] = [];
     pieces.forEach((piece) => {
-      if (piece && piece.color === activeColor) {
+      if (piece && piece.color === color) {
         const moves = piece.generateMoves(pieces);
         moves.forEach((move) => {
           allLegalMoves.push(move);
@@ -44,13 +50,16 @@ const Game = () => {
   const playGame = () => {
     setIsActiveGame(true);
     setActiveColor(PieceColor.WHITE);
+    setFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
     return;
   }
 
   // Random chess AI
   const playOpponentMove = () => {
     if (isActiveGame && activeColor !== userColor) {
-      // Select a random legal move
+      if (gamemode === "freestyle") return;
+      if (gamemode === "random") {
+        // Select a random legal move
       const moves: Move[] = findAllLegalMoves(activeColor);
       if (moves.length === 0) {
         setIsActiveGame(false);
@@ -58,8 +67,6 @@ const Game = () => {
       }
       const index = getRandomInt(moves.length);
       const move = moves[index];
-  
-      console.log(move);
   
       // Piece Movement Logic
       const piecesClone = new Array(64);
@@ -82,11 +89,13 @@ const Game = () => {
       // Delete piece from old location
       piecesClone[oldX + oldY * 8] = undefined;
   
-      console.log(piecesClone);
   
       // Change Turns
       setActiveColor(userColor);
       setPieces(piecesClone);
+      }
+      // TODO: ADD LATER
+      if (gamemode === "custom") return;
     }
   }
 
@@ -94,8 +103,14 @@ const Game = () => {
 
   return (
     <div className="game-container">
-      <Chessboard userColor={userColor} pieces={pieces} handleActiveColorChange={handleActiveColorChange} handlePiecesChange={handlePiecesChange} />
-      {!isActiveGame && <Options handleUserColorChange={handleUserColorChange} playGame={playGame}/>}
+      <Chessboard 
+        fen={fen}
+        userColor={userColor}
+        activeColor={activeColor}
+        pieces={pieces}
+        handleActiveColorChange={handleActiveColorChange}
+        handlePiecesChange={handlePiecesChange} />
+      {!isActiveGame && <Options handleGamemodeChange={handleGamemodeChange} handleUserColorChange={handleUserColorChange} playGame={playGame}/>}
     </div>
   )
 }
