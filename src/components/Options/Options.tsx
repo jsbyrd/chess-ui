@@ -5,10 +5,10 @@ import "./Options.css"
 interface Props {
   handleGamemodeChange: (mode: string) => void;
   handleUserColorChange: (color: PieceColor) => void;
-  playGame: () => void;
+  startGame: () => void;
 }
 
-const Options = ({ handleGamemodeChange, handleUserColorChange, playGame }: Props) => {
+const Options = ({ handleGamemodeChange, handleUserColorChange, startGame }: Props) => {
 
   const [color, setColor] = useState(PieceColor.WHITE);
 
@@ -19,7 +19,7 @@ const Options = ({ handleGamemodeChange, handleUserColorChange, playGame }: Prop
   const handleStartGameButton = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     handleUserColorChange(color);
-    playGame();
+    startGame();
   }
 
 

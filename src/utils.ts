@@ -34,13 +34,91 @@ export class Position {
 
 export class Move {
   piece: Piece;
-  position: Position;
+  oldPosition: Position;
+  newPosition: Position;
   isCastleMove: boolean;
 
-  constructor(piece: Piece, position: Position, isCastleMove: boolean) {
+  constructor(piece: Piece, oldPosition: Position, newPosition: Position, isCastleMove: boolean) {
     this.piece = piece;
-    this.position = position;
+    this.oldPosition = oldPosition;
+    this.newPosition = newPosition;
     this.isCastleMove = isCastleMove;
+  }
+
+  static findAllAttackMoves(pieces: Piece[], currentColor: PieceColor): Move[]  {
+    let allAttackMoves: Move[] = [];
+    pieces.forEach((piece) => {
+      if (piece && piece.color === currentColor) {
+        const moves = piece.generateAttackMoves(pieces);
+        moves.forEach((move) => {
+          allAttackMoves.push(move);
+        });
+      }
+    });
+    return allAttackMoves;
+  }
+  
+  // Returns the piece array that would occur if a particular move is made
+  static simulateMove(pieces: Piece[], move: Move): Piece[] {
+    const piecesClone = new Array(64);
+  
+    for (let i = 0; i < pieces.length; i++) {
+      piecesClone[i] = (pieces[i]) ? pieces[i].deepCopy() : undefined;
+    }
+
+    const oldX = move.oldPosition.x;
+    const oldY = move.oldPosition.y;
+    const newX = move.newPosition.x;
+    const newY = move.newPosition.y;
+
+    const pieceCopy = piecesClone[oldX + oldY * 8];
+
+    // Move piece to new location
+    piecesClone[newX + newY * 8] = pieceCopy;
+    piecesClone[newX + newY * 8].position = new Position(newX, newY);
+    const pieceType: PieceType = move.piece.type;
+    if (pieceType === PieceType.PAWN || pieceType === PieceType.KING || pieceType === PieceType.ROOK) {
+      piecesClone[newX + newY * 8].hasMoved = true;
+    }
+    // Delete piece from old location
+    piecesClone[oldX + oldY * 8] = undefined;
+    
+    return piecesClone;
+  }
+
+  static isKingInCheck (pieces: Piece[], currentColor: PieceColor): boolean {
+    // Find all attacking moves of the opponent
+    const opponentColor = (currentColor === PieceColor.WHITE) ? PieceColor.BLACK : PieceColor.WHITE;
+    const allOpponentAttackMoves = Move.findAllAttackMoves(pieces, opponentColor);
+    let isKingAttacked = false;
+
+    if (!allOpponentAttackMoves || !pieces) {
+      console.log("uh oh");
+      return false;
+    }
+    
+    // Find current player's king
+    let currentKing: Piece | undefined = undefined;
+    pieces.forEach((piece) => {
+      if (piece && piece.type === PieceType.KING && piece.color === currentColor) {
+        currentKing = piece;
+      }
+    });
+
+    // Can't find currentColor's king
+    if (!currentKing) {
+      console.log("Couldn't find the king");
+      return false;
+    }
+
+    // Check to see if the king's current position corresponds to a possible attacking move's position
+    allOpponentAttackMoves.forEach((move) => {
+      if (currentKing && currentKing.position.isSamePosition(move.newPosition)) {
+        isKingAttacked = true;
+      }
+    });
+    
+    return isKingAttacked;
   }
 }
 

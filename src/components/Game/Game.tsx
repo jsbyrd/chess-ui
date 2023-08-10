@@ -23,7 +23,7 @@ const Game = () => {
   }
 
   const handleActiveColorChange = (color: PieceColor) => {
-    setActiveColor(color)
+    setActiveColor(color);
   }
 
   const handleUserColorChange = (color: PieceColor) => {
@@ -31,13 +31,13 @@ const Game = () => {
   }
 
   const handlePiecesChange = (pieceArray: Piece[]) => {
-    setPieces(pieceArray)
+    setPieces(pieceArray);
   }
 
-  const findAllLegalMoves = (color: PieceColor) => {
+  const findAllLegalMoves = (pieces: Piece[], currentColor: PieceColor) => {
     let allLegalMoves: Move[] = [];
     pieces.forEach((piece) => {
-      if (piece && piece.color === color) {
+      if (piece && piece.color === currentColor) {
         const moves = piece.generateMoves(pieces);
         moves.forEach((move) => {
           allLegalMoves.push(move);
@@ -47,20 +47,47 @@ const Game = () => {
     return allLegalMoves;
   }
 
-  const playGame = () => {
+  const startGame = () => {
     setIsActiveGame(true);
     setActiveColor(PieceColor.WHITE);
     setFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
     return;
   }
 
-  // Random chess AI
+  const playUserMove = (move: Move) => {
+    const piecesClone = new Array(64);
+      for (let i = 0; i < pieces.length; i++) {
+        piecesClone[i] = pieces[i];
+      }
+
+      const oldX = move.oldPosition.x;
+      const oldY = move.oldPosition.y;
+      const newX = move.newPosition.x;
+      const newY = move.newPosition.y;
+
+      // Move piece to new location
+      piecesClone[newX + newY * 8] = move.piece;
+      piecesClone[newX + newY * 8].position.x = newX;
+      piecesClone[newX + newY * 8].position.y = newY;
+      const pieceType: PieceType = move.piece.type;
+      if (pieceType === PieceType.PAWN || pieceType === PieceType.KING || pieceType === PieceType.ROOK) {
+        piecesClone[newX + newY * 8].hasMoved = true;
+      }
+      // Delete piece from old location
+      piecesClone[oldX + oldY * 8] = undefined;
+
+      handlePiecesChange(piecesClone);
+      const opponentColor = userColor === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
+      handleActiveColorChange(opponentColor);
+  }
+
   const playOpponentMove = () => {
+    const piecesClone = new Array(64);
     if (isActiveGame && activeColor !== userColor) {
       if (gamemode === "freestyle") return;
       if (gamemode === "random") {
         // Select a random legal move
-      const moves: Move[] = findAllLegalMoves(activeColor);
+      const moves: Move[] = findAllLegalMoves(pieces, activeColor);
       if (moves.length === 0) {
         setIsActiveGame(false);
         return;
@@ -69,22 +96,24 @@ const Game = () => {
       const move = moves[index];
   
       // Piece Movement Logic
-      const piecesClone = new Array(64);
       for (let i = 0; i < pieces.length; i++) {
         piecesClone[i] = pieces[i];
       }
   
       // Move piece to new location
-      const oldX = move.piece.position.x;
-      const oldY = move.piece.position.y;
-      piecesClone[move.position.x + move.position.y * 8] = move.piece;
-      piecesClone[move.position.x + move.position.y * 8].position.x = move.position.x;
-      piecesClone[move.position.x + move.position.y * 8].position.y = move.position.y;
+      const oldX = move.oldPosition.x;
+      const oldY = move.oldPosition.y;
+      const newX = move.newPosition.x;
+      const newY = move.newPosition.y;
+
+      piecesClone[newX + newY * 8] = move.piece;
+      piecesClone[newX + newY * 8].position.x = newX;
+      piecesClone[newX + newY * 8].position.y = newY;
   
       // Handle hasMoved for certain pieces
       const pieceType: PieceType = move.piece.type;
       if (pieceType === PieceType.PAWN || pieceType === PieceType.KING || pieceType === PieceType.ROOK) {
-        piecesClone[move.position.x + move.position.y * 8].hasMoved = true;
+        piecesClone[newX + newY * 8].hasMoved = true;
       }
       // Delete piece from old location
       piecesClone[oldX + oldY * 8] = undefined;
@@ -109,8 +138,15 @@ const Game = () => {
         activeColor={activeColor}
         pieces={pieces}
         handleActiveColorChange={handleActiveColorChange}
-        handlePiecesChange={handlePiecesChange} />
-      {!isActiveGame && <Options handleGamemodeChange={handleGamemodeChange} handleUserColorChange={handleUserColorChange} playGame={playGame}/>}
+        handlePiecesChange={handlePiecesChange}
+        playUserMove={playUserMove}
+        />
+      {!isActiveGame && 
+      <Options 
+        handleGamemodeChange={handleGamemodeChange} 
+        handleUserColorChange={handleUserColorChange} 
+        startGame={startGame}
+        />}
     </div>
   )
 }

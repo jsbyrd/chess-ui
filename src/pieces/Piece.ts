@@ -24,4 +24,6 @@ export abstract class Piece {
   }
 
   abstract generateMoves(currentBoard: Piece[]): Move[];
+  abstract generateAttackMoves(currentBoard: Piece[]): Move[];
+  abstract deepCopy(): Piece;
 }

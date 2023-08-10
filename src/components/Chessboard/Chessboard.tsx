@@ -17,9 +17,10 @@ interface Props {
   pieces: Piece[];
   handleActiveColorChange: (color: PieceColor) => void;
   handlePiecesChange: (pieceArray: Piece[]) => void;
+  playUserMove: (move: Move) => void;
 }
 
-const Chessboard = ({ fen, userColor, activeColor, pieces, handleActiveColorChange, handlePiecesChange }: Props) => {
+const Chessboard = ({ fen, userColor, activeColor, pieces, handleActiveColorChange, handlePiecesChange, playUserMove }: Props) => {
   const [gridX, setGridX] = useState(0);
   const [gridY, setGridY] = useState(0);
   const [activePiece, setActivePiece] = useState<HTMLElement | null>(null);
@@ -132,8 +133,8 @@ const Chessboard = ({ fen, userColor, activeColor, pieces, handleActiveColorChan
       const potentialMoves: Move[] = piece.generateMoves(pieces);
       const potentialHints: NodeListOf<HTMLDivElement> = document.querySelectorAll(".potential-hint");
       potentialMoves.forEach((move) => {
-        const x: number = move.position.x;
-        const y: number = move.position.y;
+        const x: number = move.newPosition.x;
+        const y: number = move.newPosition.y;
         const correctY: number = getCorrectCoordinate(y);
         // Note: Remember, when playing as the black pieces, the pieces array and the boardUI array are essentially
         // reflections of each other. Seeing as potentialHints is based on the boardUI and NOT the pieces array, two
@@ -177,9 +178,11 @@ const Chessboard = ({ fen, userColor, activeColor, pieces, handleActiveColorChan
       const potentialPosition: Position = new Position(x, correctY);
       const allLegalMoves: Move[] = piece.generateMoves(pieces);
       let isLegalMove: boolean = false;
+      const move: Move = new Move(piece, new Position(gridX, gridY), potentialPosition, false);
 
-      allLegalMoves.forEach((move) => {
-        if (move.position.isSamePosition(potentialPosition)) {
+      // If it exists, find the corresponding move
+      allLegalMoves.forEach((potentialMove) => {
+        if (potentialMove.newPosition.isSamePosition(potentialPosition)) {
           isLegalMove = true;
         }
       });
@@ -195,27 +198,10 @@ const Chessboard = ({ fen, userColor, activeColor, pieces, handleActiveColorChan
 
       // Make the move so long as its legal
       if (isLegalMove) {
-        const piecesClone = new Array(64);
-  
-        for (let i = 0; i < pieces.length; i++) {
-          piecesClone[i] = pieces[i];
-        }
-  
-        // Move piece to new location
-        piecesClone[x + correctY * 8] = pieces[gridX + gridY * 8];
-        piecesClone[x + correctY * 8].position.x = x;
-        piecesClone[x + correctY * 8].position.y = correctY;
-        const pieceType: PieceType = piece.type;
-        if (pieceType === PieceType.PAWN || pieceType === PieceType.KING || pieceType === PieceType.ROOK) {
-          piecesClone[x + correctY * 8].hasMoved = true;
-        }
-        // Delete piece from old location
-        piecesClone[gridX + gridY * 8] = undefined;
-  
-        handlePiecesChange(piecesClone);
-        const opponentColor = userColor === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
-        handleActiveColorChange(opponentColor);
+        playUserMove(move);
       }
+
+        
       // If an illegal move, move the piece back to its original position
       else {
         activePiece.style.position = "relative";
@@ -261,6 +247,7 @@ const Chessboard = ({ fen, userColor, activeColor, pieces, handleActiveColorChan
       ref={chessboardRef}
     >
       {boardUI}
+      <button onClick={() => {console.log(pieces)}}>Debug</button>
     </div>
   );
 };
